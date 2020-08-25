@@ -5,24 +5,17 @@ FX_USER=$1
 FX_PWD=$2
 FX_JOBID=$3
 REGION=$4
-TAGS=$5
-SUITES=$6
-CATEGORIES=$7
-
-
-echo "user=${FX_USER}" 
-echo "region=${REGION}"
-echo "jobid=${FX_JOBID}"
-
-
-runId=$(curl -k --header "Content-Type: application/json;charset=UTF-8" -X POST -d '{}' -u "${FX_USER}":"${FX_PWD}" https://cloud.fxlabs.io/api/v1/runs/job/${FX_JOBID}?region=${REGION} | jq -r '.["data"]|.id')
+FX_ENVID=$5
+FX_PROJECTID=$6
+ 
+runId=$(curl --location --request --header -X POST -d '{}' -u "${FX_USER}":"${FX_PWD}" "https://cloud.fxlabs.io/api/v1/runs/job/${FX_JOBID}?region=${REGION}&env=${FX_ENVID}&projectId=${FX_PROJECTID}" | jq -r '.["data"]|.id')
 
 echo "runId =" $runId
 if [ -z "$runId" ]
 then
 	  echo "RunId = " "$runId"
           echo "Invalid runid"
-	  echo $(curl -k --header "Content-Type: application/json;charset=UTF-8" -X POST -d '{}' -u "${FX_USER}":"${FX_PWD}" https://cloud.fxlabs.io/api/v1/runs/job/${FX_JOBID}?region=${REGION})
+	  echo $(curl --location --request --header -X POST -d '{}' -u "${FX_USER}":"${FX_PWD}" 'https://cloud.fxlabs.io/api/v1/runs/job/${FX_JOBID}?region=${REGION}&env=${FX_ENVID}&projectId=${FX_PROJECTID}' | jq -r '.["data"]|.id')
           exit 1
 fi
 
@@ -37,7 +30,7 @@ while [ "$taskStatus" == "WAITING" -o "$taskStatus" == "PROCESSING" ]
 		sleep 5
 		 echo "Checking Status...."
 
-		passPercent=$(curl -k --header "Content-Type: application/json;charset=UTF-8" -X GET -u "${FX_USER}":"${FX_PWD}" https://cloud.fxlabs.io/api/v1/runs/${runId} | jq -r '.["data"]|.ciCdStatus')
+		passPercent=$(curl -k --header "Content-Type: application/json;charset=UTF-8" -X GET -u "${FX_USER}":"${FX_PWD}" https://cloud.fxlabs.io/api/v1/runs/${runId} | jq -r '.["data"]|.ciCdStatus') 
                         
 			IFS=':' read -r -a array <<< "$passPercent"
 			
@@ -48,13 +41,17 @@ while [ "$taskStatus" == "WAITING" -o "$taskStatus" == "PROCESSING" ]
 				
 
 		if [ "$taskStatus" == "COMPLETED" ];then
-
             echo "------------------------------------------------"
-			echo  "Run detail link https://cloud.fxlabs.io"${array[6]}
-			echo "------------------------------------------------"
-			echo  "${array[7]}"
-			echo "------------------------------------------------"
-                        
+			echo  "Run detail link https://cloud.fxlabs.io${array[7]}"			
+			echo "-----------------------------------------------"
+                        echo "Array 1 ${array[1]}"
+			echo "Array 2 ${array[2]}"
+			echo "Array 3 ${array[3]}"
+			echo "Array 4 ${array[4]}"
+			echo "Array 5 ${array[5]}"
+			echo "Array 6 ${array[6]}"
+			echo "Array 7 ${array[7]}"
+			
                 	echo "Job run successfully completed"
                         exit 0
 
@@ -66,11 +63,10 @@ echo "Task Status = " $taskStatus
  exit 1
 fi
 
-echo $(curl -k --header "Content-Type: application/json;charset=UTF-8" -X GET -u "${FX_USER}":"${FX_PWD}" https://cloud.fxlabs.io/api/v1/runs/${runId})
+echo "$(curl -k --header "Content-Type: application/json;charset=UTF-8" -X GET -u "${FX_USER}":"${FX_PWD}" https://cloud.fxlabs.io/api/v1/runs/${runId})"
 exit 1
 
 return 0
-
 
 
 
